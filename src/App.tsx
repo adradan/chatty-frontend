@@ -1,10 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
 import './App.css';
+import { useKeys } from '@/hooks';
+import {
+    decryptMessage,
+    encryptMessage,
+    generateKeyPair,
+} from '@/lib/encryption.ts';
 
 function App() {
     const [count, setCount] = useState(0);
+    const [keys, setKeys] = useKeys();
+
+    useEffect(() => {
+        generateKeyPair().then(async (pair) => {
+            const enc = await encryptMessage('HELLO, WORLD!', pair.publicKey);
+            const dec = await decryptMessage(enc, pair.privateKey);
+            console.log(new TextDecoder().decode(dec));
+        });
+    }, []);
 
     return (
         <>
