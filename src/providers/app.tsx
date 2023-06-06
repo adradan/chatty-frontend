@@ -1,8 +1,4 @@
-import { useState } from 'react';
-import { KeyPairContext } from '@/context/keyPair.ts';
-import { BrowserRouter, Router, RouterProvider } from 'react-router-dom';
-import { AppRouter } from '@/routes';
-import { useKeys } from '@/hooks';
+import { BrowserRouter } from 'react-router-dom';
 
 type AppProviderTypes = {
     children: React.ReactNode;

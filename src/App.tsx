@@ -1,25 +1,19 @@
-import { useEffect, useState } from 'react';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
+import { useEffect } from 'react';
 import './App.css';
 import {
     decryptMessage,
     encryptMessage,
     generateKeyPair,
 } from '@/lib/encryption.ts';
-import { KeyPairContext } from '@/context/keyPair.ts';
-import Button from 'react-bootstrap/Button';
-import Container from 'react-bootstrap/Container';
 import { AppProvider } from '@/providers/app.tsx';
 import { useKeys } from '@/hooks';
-import { RouterProvider } from 'react-router-dom';
-import { AppRouter } from '@/routes';
+import { AppRoutes } from '@/routes';
+import NavBar from '@/components/NavBar/NavBar.tsx';
 
 function App() {
-    const [count, setCount] = useState(0);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const [keyPair, setKeyPair] = useKeys();
+    const { keyPair, setKeyPair } = useKeys();
 
     useEffect(() => {
         generateKeyPair().then(async (pair) => {
@@ -29,7 +23,12 @@ function App() {
         });
     }, []);
 
-    return <RouterProvider router={AppRouter()} />;
+    return (
+        <AppProvider>
+            <NavBar />
+            <AppRoutes />
+        </AppProvider>
+    );
 }
 
 export default App;
