@@ -2,16 +2,24 @@ import { useEffect, useState } from 'react';
 import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
 import './App.css';
-import { useKeys } from '@/hooks';
 import {
     decryptMessage,
     encryptMessage,
     generateKeyPair,
 } from '@/lib/encryption.ts';
+import { KeyPairContext } from '@/context/keyPair.ts';
+import Button from 'react-bootstrap/Button';
+import Container from 'react-bootstrap/Container';
+import { AppProvider } from '@/providers/app.tsx';
+import { useKeys } from '@/hooks';
+import { RouterProvider } from 'react-router-dom';
+import { AppRouter } from '@/routes';
 
 function App() {
     const [count, setCount] = useState(0);
-    const [keys, setKeys] = useKeys();
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const [keyPair, setKeyPair] = useKeys();
 
     useEffect(() => {
         generateKeyPair().then(async (pair) => {
@@ -21,34 +29,7 @@ function App() {
         });
     }, []);
 
-    return (
-        <>
-            <div>
-                <a href="https://vitejs.dev" target="_blank">
-                    <img src={viteLogo} className="logo" alt="Vite logo" />
-                </a>
-                <a href="https://react.dev" target="_blank">
-                    <img
-                        src={reactLogo}
-                        className="logo react"
-                        alt="React logo"
-                    />
-                </a>
-            </div>
-            <h1>Vite + React</h1>
-            <div className="card">
-                <button onClick={() => setCount((count) => count + 1)}>
-                    count is {count}
-                </button>
-                <p>
-                    Edit <code>src/App.tsx</code> and save to test HMR
-                </p>
-            </div>
-            <p className="read-the-docs">
-                Click on the Vite and React logos to learn more
-            </p>
-        </>
-    );
+    return <RouterProvider router={AppRouter()} />;
 }
 
 export default App;
