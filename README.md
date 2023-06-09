@@ -1,7 +1,8 @@
 # Chatty Frontend
 
 ### Goals:
-- End-to-End Encryption
+
+-   End-to-End Encryption
 
 ### File Structure
 
@@ -25,7 +26,8 @@ as inspirations.
                 - component-1.tsx
                 - component-1.css
 ```
-*Subject to change*
+
+_Subject to change_
 
 ### License
 

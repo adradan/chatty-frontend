@@ -7,5 +7,9 @@ type AppProviderTypes = {
 export const AppProvider = ({ children }: AppProviderTypes) => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    return <BrowserRouter>{children}</BrowserRouter>;
+    return (
+        <div className="flex h-full flex-col dark:bg-gray-800">
+            <BrowserRouter>{children}</BrowserRouter>
+        </div>
+    );
 };

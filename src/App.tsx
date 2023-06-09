@@ -26,7 +26,9 @@ function App() {
     return (
         <AppProvider>
             <NavBar />
-            <AppRoutes />
+            <div className="grow p-8">
+                <AppRoutes />
+            </div>
         </AppProvider>
     );
 }

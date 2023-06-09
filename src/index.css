@@ -7,8 +7,23 @@ html {
     box-sizing: border-box;
 }
 
-*, *:before, *:after {
+html,
+body {
+    height: 100%;
+}
+
+#root {
+    height: 100%;
+}
+
+*,
+*:before,
+*:after {
     box-sizing: inherit;
+}
+
+*, *:focus, *:focus-visible {
+    outline: none
 }
 
 :root {
@@ -16,9 +31,9 @@ html {
     line-height: 1.5;
     font-weight: 400;
 
-    color-scheme: light;
-    color: rgba(255, 255, 255, 0.87);
-    background-color: #242424;
+    color-scheme: dark;
+    /*color: rgba(255, 255, 255, 0.87);*/
+    /*background-color: #242424;*/
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
