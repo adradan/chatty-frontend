@@ -1,13 +1,16 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useKeys } from '@/hooks';
 import Button from '@/components/Elements/Button';
 import BurgerMenu from '@/heroicons/BurgerMenu.tsx';
 import { Menu, Transition } from '@headlessui/react';
+import { useContext, useEffect } from 'react';
+import { KeyPairContext } from '@/context/keyPair.ts';
 
 export default function NavBar() {
     const navigate = useNavigate();
-    const { keyPair } = useKeys();
-
+    const { keyPair } = useContext(KeyPairContext);
+    useEffect(() => {
+        console.log(keyPair);
+    }, [keyPair]);
     const goHome = () => {
         navigate('/');
     };
@@ -53,7 +56,7 @@ export default function NavBar() {
                                     </Menu.Item>
                                     <Menu.Item>
                                         <Link
-                                            to="/user/login"
+                                            to="/chat/dm"
                                             className="inline-block w-full px-3 py-2"
                                         >
                                             DMs

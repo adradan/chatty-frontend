@@ -1,8 +1,13 @@
 import ContentBackdrop from 'src/components/Elements/ContentBackdrop';
 import Button from '@/components/Elements/Button';
 import TextInput from '@/components/Elements/TextInput';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import clsx from 'clsx';
+import { generateKeyPair } from '@/lib/encryption.ts';
+import { useNavigate } from 'react-router-dom';
+import { KeyPairContext } from '@/context/keyPair.ts';
+import { Key, keyDB } from '@/lib/db.ts';
+import { UsernameContext } from '@/context/username.ts';
 
 const inputState = {
     Ok: 'ok',
@@ -15,22 +20,45 @@ type InputStateKey = keyof typeof inputState;
 type InputStateCode = (typeof inputState)[InputStateKey];
 
 export const Login = () => {
-    const [username, setUsername] = useState('');
+    const navigate = useNavigate();
+    const { setKeyPair } = useContext(KeyPairContext);
+    const { setUsername } = useContext(UsernameContext);
+    const [usr, setUsr] = useState('');
     const [state, setState] = useState<InputStateCode>(inputState.Ok);
     const [error, setError] = useState('');
 
-    const connect = () => {
-        if (!username) {
+    const connect = async () => {
+        if (!usr.length) {
             setError('Username required.');
             setState(inputState.Error);
+            return;
         }
         setError('');
         setState(inputState.Loading);
+        const newKeyPair = await generateKeyPair();
+        // Save in IndexDB
+        const userId = await keyDB.usernames.add({
+            username: usr,
+        });
+        await keyDB.privateKeys.add({
+            key: newKeyPair.privateKey,
+            timestamp: new Date(),
+            userId,
+        } as Key);
+        await keyDB.publicKeys.add({
+            key: newKeyPair.publicKey,
+            timestamp: new Date(),
+            userId,
+        } as Key);
+        setUsername(usr);
+        setKeyPair(newKeyPair);
+
+        navigate('/');
     };
 
     const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const username = event.target.value.trim();
-        setUsername(username);
+        setUsr(username);
     };
 
     return (
@@ -44,7 +72,7 @@ export const Login = () => {
                                 label="Create a username:"
                                 id="username"
                                 maxLength={15}
-                                value={username}
+                                value={usr}
                                 onChange={onChange}
                                 error={error}
                             />

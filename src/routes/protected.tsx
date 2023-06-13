@@ -1,9 +1,9 @@
 import { RouteObject } from 'react-router-dom';
-import { UserRoutes } from '@/features/user/routes';
+import { ChatRoutes } from '@/features/chat/routes';
 
-export const publicRoutes: RouteObject[] = [
+export const privateRoutes: RouteObject[] = [
     {
         path: '/chat/*',
-        element: <UserRoutes />,
+        element: <ChatRoutes />,
     },
 ];
