@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { KeyPairContext } from '@/context/keyPair.ts';
 import { Key, keyDB } from '@/lib/db.ts';
 import { UsernameContext } from '@/context/username.ts';
+import { useSocket } from '@/providers/socketProvider.tsx';
 
 const inputState = {
     Ok: 'ok',
@@ -27,6 +28,8 @@ export const Login = () => {
     const [state, setState] = useState<InputStateCode>(inputState.Ok);
     const [error, setError] = useState('');
 
+    const socketService = useSocket();
+
     const connect = async () => {
         if (!usr.length) {
             setError('Username required.');
@@ -39,6 +42,7 @@ export const Login = () => {
         // Save in IndexDB
         const userId = await keyDB.usernames.add({
             username: usr,
+            timestamp: new Date(),
         });
         await keyDB.privateKeys.add({
             key: newKeyPair.privateKey,
@@ -52,12 +56,19 @@ export const Login = () => {
         } as Key);
         setUsername(usr);
         setKeyPair(newKeyPair);
-
+        const l = await window.crypto.subtle.exportKey(
+            'jwk',
+            newKeyPair.publicKey
+        );
+        console.log(l);
+        socketService.connect(usr, l);
+        console.log(socketService.getSocket());
         navigate('/');
     };
 
     const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const username = event.target.value.trim();
+        console.log(import.meta.env.VITE_BACKEND_URL);
         setUsr(username);
     };
 

@@ -19,10 +19,8 @@ export default function NavBar() {
         <div className="flex w-full items-center justify-between gap-2 p-4">
             <div>
                 <Menu as="div" className="relative text-left">
-                    <Menu.Button>
-                        <Button>
-                            <BurgerMenu />
-                        </Button>
+                    <Menu.Button as={Button}>
+                        <BurgerMenu />
                     </Menu.Button>
                     <Transition enter="transition duration-100">
                         <Menu.Items className="absolute mt-2 w-32 divide-y divide-solid divide-gray-600 rounded-md bg-gray-700">

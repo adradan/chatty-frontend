@@ -10,6 +10,7 @@ export interface Key {
 export interface Username {
     id?: number;
     username: string;
+    timestamp: Date;
 }
 
 export class DexieSubclass extends Dexie {
@@ -22,7 +23,7 @@ export class DexieSubclass extends Dexie {
         this.version(1).stores({
             publicKeys: '++id, key, timestamp',
             privateKeys: '++id, key, timestamp',
-            usernames: '++id, username',
+            usernames: '++id, username, timestamp',
         });
     }
 }
