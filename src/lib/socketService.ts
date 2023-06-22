@@ -1,0 +1,109 @@
+import { createContext, useContext } from 'react';
+import {
+    ServerMessage,
+    ServerMessageCommands,
+    SynCommand,
+} from '@/types/socket.ts';
+
+export const inviteStatuses = {
+    Invited: 'invited',
+    ReceivedKey: 'receivedKey',
+    SentAck: 'sentAck',
+};
+
+BigInt.prototype.toJSON = function () {
+    return this.toString();
+};
+
+class SocketService {
+    private _socket: WebSocket | undefined;
+    private _userId: string = '';
+    private username = '';
+    private publicKey: JsonWebKey | undefined;
+    private _lastSentCommand: ServerMessageCommands | undefined;
+
+    handleSyn = (serverMessage: ServerMessage) => {
+        const { sender } = serverMessage;
+        console.log(serverMessage);
+    };
+
+    connect = (username: string, publicKey: JsonWebKey): Promise<boolean> => {
+        return new Promise((resolve) => {
+            this._socket = new WebSocket('ws://localhost:3000/ws/');
+            this._socket.onmessage = (event: MessageEvent) => {
+                let { data } = event;
+                data = data.replace(/^({"sender":)(\d+)(,)/, '$1"$2"$3');
+                const serverMessage = JSON.parse(data) as ServerMessage;
+                switch (serverMessage.command) {
+                    case ServerMessageCommands.MessageSent:
+                        break;
+                    case ServerMessageCommands.StartedSession:
+                        this._userId = serverMessage.sender;
+                        break;
+                    case ServerMessageCommands.NoRecipient:
+                        break;
+                    case ServerMessageCommands.ChatMessage:
+                        break;
+                    case ServerMessageCommands.Ack:
+                        break;
+                    case ServerMessageCommands.Syn:
+                        this.handleSyn(serverMessage);
+                        break;
+                    case ServerMessageCommands.Success:
+                        break;
+                    case ServerMessageCommands.SynAck:
+                        break;
+                    default:
+                        break;
+                }
+            };
+            this._socket.onerror = () => {
+                resolve(false);
+            };
+            this._socket.onopen = () => {
+                this.username = username;
+                this.publicKey = publicKey;
+                resolve(true);
+            };
+        });
+    };
+
+    close = () => {
+        if (!this._socket) return;
+        this._socket.close(1000, 'Client leaving.');
+    };
+
+    invite = (recipient: string) => {
+        if (!this.publicKey || !this._socket) return false;
+        const body: SynCommand = {
+            Syn: {
+                inviterKey: JSON.stringify(this.publicKey),
+                recipient: BigInt(recipient).toString(),
+            },
+        };
+        this._socket.send(JSON.stringify(body));
+        this._lastSentCommand = ServerMessageCommands.Syn;
+    };
+
+    get socket(): WebSocket | undefined {
+        return this._socket;
+    }
+
+    get userId(): string {
+        return this._userId;
+    }
+
+    get lastSentCommand(): ServerMessageCommands | undefined {
+        return this._lastSentCommand;
+    }
+}
+
+export const socketService = new SocketService();
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+export const SocketContext = createContext<SocketService>(socketService);
+
+export const useSocket = () => {
+    return useContext(SocketContext);
+};

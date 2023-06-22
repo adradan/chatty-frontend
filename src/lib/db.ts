@@ -1,4 +1,5 @@
 import Dexie, { Table } from 'dexie';
+import { createContext, useContext } from 'react';
 
 export interface Key {
     id?: number;
@@ -29,3 +30,66 @@ export class DexieSubclass extends Dexie {
 }
 
 export const keyDB = new DexieSubclass();
+
+export class DbService {
+    keyDB = new DexieSubclass();
+
+    resetDb = async () => {
+        await this.keyDB.privateKeys.clear();
+        await this.keyDB.publicKeys.clear();
+        await this.keyDB.usernames.clear();
+    };
+
+    login = async (keyPair: CryptoKeyPair, username: string) => {
+        const userId = await keyDB.usernames.add({
+            username,
+            timestamp: new Date(),
+        });
+        await keyDB.privateKeys.add({
+            key: keyPair.privateKey,
+            timestamp: new Date(),
+            userId,
+        } as Key);
+        await keyDB.publicKeys.add({
+            key: keyPair.publicKey,
+            timestamp: new Date(),
+            userId,
+        } as Key);
+    };
+
+    getUsername = async () => {
+        const usr = await keyDB.usernames.orderBy('timestamp').last();
+
+        if (!usr) return;
+        return usr.username;
+    };
+    getKeyPair = async () => {
+        const privateKey = await keyDB.privateKeys.orderBy('timestamp').last();
+        const publicKey = await keyDB.publicKeys.orderBy('timestamp').last();
+
+        if (!privateKey || !publicKey) return;
+
+        return {
+            privateKey,
+            publicKey,
+        };
+    };
+
+    getCache = async () => {
+        const keyPair = await this.getKeyPair();
+        const username = await this.getUsername();
+        if (!keyPair || !username) return;
+
+        return {
+            keyPair,
+            username,
+        };
+    };
+}
+export const dbService = new DbService();
+
+export const DbContext = createContext<DbService>(dbService);
+
+export const useDb = () => {
+    return useContext(DbContext);
+};

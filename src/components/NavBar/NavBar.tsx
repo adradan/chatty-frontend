@@ -46,7 +46,7 @@ export default function NavBar() {
                                 <>
                                     <Menu.Item>
                                         <Link
-                                            to="/user/login"
+                                            to="/user/logout"
                                             className="inline-block w-full px-3 py-2"
                                         >
                                             Logout

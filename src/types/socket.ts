@@ -13,7 +13,7 @@ export type MessageCommand = {
 export type SynCommand = {
     Syn: {
         inviterKey: string;
-        recipient: number;
+        recipient: string;
     };
 };
 
@@ -47,7 +47,7 @@ export type ServerMessageCommands =
     (typeof ServerMessageCommands)[keyof typeof ServerMessageCommands];
 
 export type ServerMessage = {
-    sender: number;
+    sender: string;
     message: string;
     command: ServerMessageCommands;
 };

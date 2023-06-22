@@ -6,9 +6,9 @@ import clsx from 'clsx';
 import { generateKeyPair } from '@/lib/encryption.ts';
 import { useNavigate } from 'react-router-dom';
 import { KeyPairContext } from '@/context/keyPair.ts';
-import { Key, keyDB } from '@/lib/db.ts';
+import { useDb } from '@/lib/db.ts';
 import { UsernameContext } from '@/context/username.ts';
-import { useSocket } from '@/providers/socketProvider.tsx';
+import { useSocket } from '@/lib/socketService.ts';
 
 const inputState = {
     Ok: 'ok',
@@ -29,6 +29,7 @@ export const Login = () => {
     const [error, setError] = useState('');
 
     const socketService = useSocket();
+    const dbService = useDb();
 
     const connect = async () => {
         if (!usr.length) {
@@ -40,20 +41,7 @@ export const Login = () => {
         setState(inputState.Loading);
         const newKeyPair = await generateKeyPair();
         // Save in IndexDB
-        const userId = await keyDB.usernames.add({
-            username: usr,
-            timestamp: new Date(),
-        });
-        await keyDB.privateKeys.add({
-            key: newKeyPair.privateKey,
-            timestamp: new Date(),
-            userId,
-        } as Key);
-        await keyDB.publicKeys.add({
-            key: newKeyPair.publicKey,
-            timestamp: new Date(),
-            userId,
-        } as Key);
+        await dbService.login(newKeyPair, usr);
         setUsername(usr);
         setKeyPair(newKeyPair);
         const l = await window.crypto.subtle.exportKey(
@@ -61,14 +49,19 @@ export const Login = () => {
             newKeyPair.publicKey
         );
         console.log(l);
-        socketService.connect(usr, l);
-        console.log(socketService.getSocket());
-        navigate('/');
+        const isConnected = await socketService.connect(usr, l);
+        console.log(socketService.socket);
+        if (isConnected) {
+            navigate('/');
+            return;
+        }
+        await dbService.resetDb();
+        setError("Couldn't connect to server.");
+        setState(inputState.Error);
     };
 
     const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const username = event.target.value.trim();
-        console.log(import.meta.env.VITE_BACKEND_URL);
         setUsr(username);
     };
 
