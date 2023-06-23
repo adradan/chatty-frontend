@@ -7,6 +7,7 @@ import clsx from 'clsx';
 import { useSocket } from '@/lib/socketService.ts';
 import { sleep } from '@/lib/time.ts';
 import { ServerMessageCommands } from '@/types/socket.ts';
+import { useAppDispatch } from '@/hooks/store.ts';
 
 const chatStates = {
     Ok: 'ok',
@@ -27,6 +28,7 @@ export const Chat = () => {
     const [state, setState] = useState<ChatStateCode>(chatStates.Waiting);
 
     const socketService = useSocket();
+    const dispatch = useAppDispatch();
 
     const onRecipientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const rec = event.target.value.trim();
@@ -34,6 +36,11 @@ export const Chat = () => {
     };
 
     const invite = async () => {
+        dispatch({
+            type: 'username',
+            value: 'test',
+        });
+        return;
         console.log(recipient, 'asdf');
         if (!recipient.length || !/^\d+$/g.test(recipient)) {
             setError('Enter a valid recipient ID.');

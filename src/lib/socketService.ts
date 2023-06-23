@@ -4,6 +4,7 @@ import {
     ServerMessageCommands,
     SynCommand,
 } from '@/types/socket.ts';
+import { observeStore, RootState, selectFn, store } from '@/lib/store.ts';
 
 export const inviteStatuses = {
     Invited: 'invited',
@@ -15,12 +16,25 @@ BigInt.prototype.toJSON = function () {
     return this.toString();
 };
 
+const selectKeys: selectFn<CryptoKey> = (state: RootState) => {
+    return state.keys;
+};
+
 class SocketService {
     private _socket: WebSocket | undefined;
-    private _userId: string = '';
+    private _userId = '';
     private username = '';
     private publicKey: JsonWebKey | undefined;
     private _lastSentCommand: ServerMessageCommands | undefined;
+    // public receivedCommand = useState<ServerMessageCommands>(
+    //     ServerMessageCommands.Unknown
+    // );
+
+    constructor() {
+        observeStore(store, selectKeys, (keys) => {
+            console.log(keys);
+        });
+    }
 
     handleSyn = (serverMessage: ServerMessage) => {
         const { sender } = serverMessage;
@@ -31,8 +45,7 @@ class SocketService {
         return new Promise((resolve) => {
             this._socket = new WebSocket('ws://localhost:3000/ws/');
             this._socket.onmessage = (event: MessageEvent) => {
-                let { data } = event;
-                data = data.replace(/^({"sender":)(\d+)(,)/, '$1"$2"$3');
+                const { data } = event;
                 const serverMessage = JSON.parse(data) as ServerMessage;
                 switch (serverMessage.command) {
                     case ServerMessageCommands.MessageSent:

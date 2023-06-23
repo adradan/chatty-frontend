@@ -41,10 +41,15 @@ export const ServerMessageCommands = {
     MessageSent: 'MessageSent',
     StartedSession: 'StartedSession',
     Success: 'Success',
+    Unknown: 'Unknown',
 } as const;
 
 export type ServerMessageCommands =
     (typeof ServerMessageCommands)[keyof typeof ServerMessageCommands];
+
+export function isServerMessageCommand(x: string): x is ServerMessageCommands {
+    return Object.keys(ServerMessageCommands).includes(x);
+}
 
 export type ServerMessage = {
     sender: string;

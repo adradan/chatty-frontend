@@ -6,6 +6,8 @@ import { useDb } from '@/lib/db.ts';
 import { SocketProvider } from '@/providers/socketProvider.tsx';
 import { DbProvider } from '@/providers/dbProvider.tsx';
 import { useSocket } from '@/lib/socketService.ts';
+import { Provider } from 'react-redux';
+import { store } from '@/lib/store.ts';
 
 type AppProviderTypes = {
     children: React.ReactNode;
@@ -52,16 +54,20 @@ export const AppProvider = ({ children }: AppProviderTypes) => {
     }, []);
 
     return (
-        <DbProvider>
-            <SocketProvider>
-                <UsernameContext.Provider value={{ username, setUsername }}>
-                    <KeyPairContext.Provider value={{ keyPair, setKeyPair }}>
-                        <div className="flex h-full flex-col dark:bg-gray-800">
-                            <BrowserRouter>{children}</BrowserRouter>
-                        </div>
-                    </KeyPairContext.Provider>
-                </UsernameContext.Provider>
-            </SocketProvider>
-        </DbProvider>
+        <Provider store={store}>
+            <DbProvider>
+                <SocketProvider>
+                    <UsernameContext.Provider value={{ username, setUsername }}>
+                        <KeyPairContext.Provider
+                            value={{ keyPair, setKeyPair }}
+                        >
+                            <div className="flex h-full flex-col dark:bg-gray-800">
+                                <BrowserRouter>{children}</BrowserRouter>
+                            </div>
+                        </KeyPairContext.Provider>
+                    </UsernameContext.Provider>
+                </SocketProvider>
+            </DbProvider>
+        </Provider>
     );
 };
