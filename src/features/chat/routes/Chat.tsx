@@ -4,29 +4,18 @@ import TextInput from '@/components/Elements/TextInput';
 import Button from '@/components/Elements/Button';
 import clsx from 'clsx';
 import { useSocket } from '@/lib/socketService.ts';
-import { sleep } from '@/lib/time.ts';
-import { ServerMessageCommands } from '@/types/socket.ts';
-import { useAppDispatch } from '@/hooks/store.ts';
-
-const chatStates = {
-    Ok: 'ok',
-    Error: 'error',
-    Loading: 'loading',
-    Connected: 'connected',
-    Waiting: 'waiting',
-    Invited: 'invited',
-} as const;
-
-type ChatStateKey = keyof typeof chatStates;
-type ChatStateCode = (typeof chatStates)[ChatStateKey];
+import { useAppDispatch, useAppSelector } from '@/hooks/store.ts';
+import { ChatStates } from '@/types/chat.ts';
+import { erroring } from '@/lib/store/error.ts';
 
 export const Chat = () => {
     const [recipient, setRecipient] = useState('');
-    const [error, setError] = useState('');
-    const [state, setState] = useState<ChatStateCode>(chatStates.Waiting);
 
     const socketService = useSocket();
     const dispatch = useAppDispatch();
+    const error = useAppSelector((state) => state.error);
+    const userId = useAppSelector((state) => state.user);
+    const chatState = useAppSelector((state) => state.chatState);
 
     const onRecipientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const rec = event.target.value.trim();
@@ -34,38 +23,23 @@ export const Chat = () => {
     };
 
     const invite = async () => {
-        dispatch({
-            type: 'username',
-            value: 'test',
-        });
-        return;
-        console.log(recipient, 'asdf');
         if (!recipient.length || !/^\d+$/g.test(recipient)) {
-            setError('Enter a valid recipient ID.');
+            dispatch(erroring('error/set', 'Enter a valid recipient ID.'));
             return;
         }
-        setError('');
-        setState(chatStates.Invited);
+        dispatch(erroring('error/clear'));
+
         socketService.invite(recipient);
-        await sleep();
-        if (socketService.lastSentCommand == ServerMessageCommands.Syn) {
-            setError("Recipient didn't respond.");
-            setState(chatStates.Waiting);
-            return;
-        }
-        // setState(chatStates.Loading);
     };
 
     return (
         <div className="flex h-full flex-col">
             <h1 className="text-4xl font-bold">Chat</h1>
-            <h3 className="text-2xl font-bold">
-                Your User ID: {socketService.userId}
-            </h3>
+            <h3 className="text-2xl font-bold">Your User ID: {userId}</h3>
             <div className="mt-8 flex grow justify-center">
                 <ContentBackdrop className="flex h-full w-full p-8">
-                    {(state == chatStates.Waiting ||
-                        state == chatStates.Invited) && (
+                    {(chatState == ChatStates.Waiting ||
+                        chatState == ChatStates.Inviting) && (
                         <form className="flex flex-col gap-2">
                             <div>
                                 <TextInput
@@ -86,11 +60,11 @@ export const Chat = () => {
                                         fill="none"
                                         viewBox="0 0 24 24"
                                         className={clsx(
-                                            state == chatStates.Invited &&
+                                            chatState === ChatStates.Inviting &&
                                                 'animate-spin',
                                             'h-4',
                                             'w-4',
-                                            state != chatStates.Invited &&
+                                            chatState !== ChatStates.Inviting &&
                                                 'hidden'
                                         )}
                                     >

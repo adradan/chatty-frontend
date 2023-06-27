@@ -1,26 +1,29 @@
+type keyType = 'dmKey';
+
 interface KeyAction {
-    type: 'privateKey' | 'publicKey';
+    type: keyType;
     payload: CryptoKey;
 }
 
 export type KeyState = {
-    privateKey?: CryptoKey;
-    publicKey?: CryptoKey;
+    dmKey?: JsonWebKey;
 };
 
 const initialState: KeyState = {};
 
+export const keys = (key: CryptoKey): KeyAction => {
+    return {
+        type: 'dmKey',
+        payload: key,
+    };
+};
+
 export default function keyReducer(state = initialState, action: KeyAction) {
     switch (action.type) {
-        case 'privateKey':
+        case 'dmKey':
             return {
                 ...state,
-                privateKey: action.payload,
-            };
-        case 'publicKey':
-            return {
-                ...state,
-                publicKey: action.payload,
+                dmKey: action.payload,
             };
         default:
             return state;

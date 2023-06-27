@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { KeyPairContext } from '@/context/keyPair.ts';
 import { useDb } from '@/lib/db.ts';
 import { useSocket } from '@/lib/socketService.ts';
+import { useAppDispatch } from '@/hooks/store.ts';
+import { chatStateActions } from '@/lib/store/chatState.ts';
 
 const inputState = {
     Ok: 'ok',
@@ -26,6 +28,7 @@ export const Login = () => {
 
     const socketService = useSocket();
     const dbService = useDb();
+    const dispatch = useAppDispatch();
 
     const connect = async () => {
         setError('');
@@ -34,14 +37,17 @@ export const Login = () => {
         // Save in IndexDB
         await dbService.login(newKeyPair);
         setKeyPair(newKeyPair);
-        const l = await window.crypto.subtle.exportKey(
+        const exportedPublic = await window.crypto.subtle.exportKey(
             'jwk',
             newKeyPair.publicKey
         );
-        console.log(l);
-        const isConnected = await socketService.connect(l);
-        console.log(socketService.socket);
+        const isConnected = await socketService.connect(
+            newKeyPair.publicKey,
+            newKeyPair.privateKey,
+            exportedPublic
+        );
         if (isConnected) {
+            dispatch(chatStateActions.initializing());
             navigate('/');
             return;
         }

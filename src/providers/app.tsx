@@ -28,15 +28,20 @@ export const AppProvider = ({ children }: AppProviderTypes) => {
 
         dbService.getCache().then(async (cached) => {
             if (!cached) return;
+            const { keyPair } = cached;
             setKeyPair({
-                publicKey: cached.keyPair.publicKey.key,
-                privateKey: cached.keyPair.privateKey.key,
+                publicKey: keyPair.publicKey.key,
+                privateKey: keyPair.privateKey.key,
             });
             const exported = await window.crypto.subtle.exportKey(
                 'jwk',
-                cached.keyPair.publicKey.key
+                keyPair.publicKey.key
             );
-            const isConnected = await socketService.connect(exported);
+            const isConnected = await socketService.connect(
+                keyPair.publicKey.key,
+                keyPair.privateKey.key,
+                exported
+            );
             if (isConnected) {
                 // dispatch(chatStateActions.initializing());
                 store.dispatch(chatStateActions.initializing());

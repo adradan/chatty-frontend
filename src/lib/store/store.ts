@@ -1,22 +1,10 @@
-import { ServerMessageCommands } from '@/types/socket.ts';
-import { ChatMessage, ChatStates } from '@/types/chat.ts';
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import commandReducer from './commands.ts';
-import keyReducer, { KeyState } from '@/lib/store/keys.ts';
+import keyReducer from '@/lib/store/keys.ts';
 import messageReducer from '@/lib/store/messages.ts';
 import chatStateReducer from '@/lib/store/chatState.ts';
 import userReducer from '@/lib/store/user.ts';
-
-interface AppState {
-    lastCommands: {
-        lastSentCommand: ServerMessageCommands;
-        lastReceivedCommand: ServerMessageCommands;
-    };
-    keys: KeyState;
-    userId: string;
-    messages: ChatMessage[];
-    chatState: ChatStates;
-}
+import errorReducer from '@/lib/store/error.ts';
 
 const rootReducer = combineReducers({
     lastCommands: commandReducer,
@@ -24,6 +12,7 @@ const rootReducer = combineReducers({
     messages: messageReducer,
     chatState: chatStateReducer,
     user: userReducer,
+    error: errorReducer,
 });
 
 export const store = configureStore({

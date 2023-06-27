@@ -1,7 +1,7 @@
 import { ChatMessage } from '@/types/chat.ts';
 
 interface ChatAction {
-    type: 'clear' | 'add';
+    type: 'messages/clear' | 'messages/add';
     payload?: ChatMessage;
 }
 
@@ -12,12 +12,12 @@ export default function messageReducer(
     action: ChatAction
 ) {
     switch (action.type) {
-        case 'clear':
+        case 'messages/clear':
             return {
                 ...state,
                 messages: [],
             };
-        case 'add':
+        case 'messages/add':
             if (!action.payload) return state;
             return {
                 ...state,

@@ -1,6 +1,6 @@
 export type JoinCommand = {
     Join: {
-        recipient: number;
+        recipient: string;
     };
 };
 
@@ -10,26 +10,32 @@ export type MessageCommand = {
     };
 };
 
+export type SynMessage = {
+    inviterKey: string;
+    recipient: string;
+};
+
 export type SynCommand = {
-    Syn: {
-        inviterKey: string;
-        recipient: string;
-    };
+    Syn: SynMessage;
+};
+
+export type SynAckMessage = {
+    inviterKey: string;
+    recipientKey: string;
+    recipient: string;
 };
 
 export type SynAckCommand = {
-    SynAck: {
-        inviterKey: string;
-        recipientKey: string;
-        recipient: number;
-    };
+    SynAck: SynAckMessage;
+};
+
+export type AckMessage = {
+    recipientKey: string;
+    recipient: string;
 };
 
 export type AckCommand = {
-    Ack: {
-        recipientKey: string;
-        recipient: number;
-    };
+    Ack: AckMessage;
 };
 
 export const ServerMessageCommands = {
@@ -53,7 +59,7 @@ export function isServerMessageCommand(x: string): x is ServerMessageCommands {
 
 export type ServerMessage = {
     sender: string;
-    message: string;
+    message: string | SynMessage | SynAckMessage | AckMessage;
     command: ServerMessageCommands;
 };
 
