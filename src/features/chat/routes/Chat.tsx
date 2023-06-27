@@ -7,6 +7,10 @@ import { useSocket } from '@/lib/socketService.ts';
 import { useAppDispatch, useAppSelector } from '@/hooks/store.ts';
 import { ChatStates } from '@/types/chat.ts';
 import { erroring } from '@/lib/store/error.ts';
+import { Dialog } from '@headlessui/react';
+import { keys } from '@/lib/store/keys.ts';
+import { recipientAction } from '@/lib/store/user.ts';
+import { chatStateActions } from '@/lib/store/chatState.ts';
 
 export const Chat = () => {
     const [recipient, setRecipient] = useState('');
@@ -14,8 +18,12 @@ export const Chat = () => {
     const socketService = useSocket();
     const dispatch = useAppDispatch();
     const error = useAppSelector((state) => state.error);
-    const userId = useAppSelector((state) => state.user);
+    const userInfo = useAppSelector((state) => state.user);
     const chatState = useAppSelector((state) => state.chatState);
+    const recipientKeys = useAppSelector((state) => state.keys.dmKey);
+
+    const invitedModalOpen =
+        chatState === ChatStates.Invited && !!recipientKeys;
 
     const onRecipientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const rec = event.target.value.trim();
@@ -32,14 +40,30 @@ export const Chat = () => {
         socketService.invite(recipient);
     };
 
+    const rejectInvite = () => {
+        dispatch(keys());
+        dispatch(recipientAction(''));
+        dispatch(chatStateActions.rejectingInvite());
+    };
+
+    const acceptInvite = () => {
+        socketService.acceptInvite();
+    };
+
     return (
         <div className="flex h-full flex-col">
             <h1 className="text-4xl font-bold">Chat</h1>
-            <h3 className="text-2xl font-bold">Your User ID: {userId}</h3>
+            <h3 className="text-2xl font-bold">
+                Your User ID: {userInfo.userId}
+            </h3>
             <div className="mt-8 flex grow justify-center">
                 <ContentBackdrop className="flex h-full w-full p-8">
-                    {(chatState == ChatStates.Waiting ||
-                        chatState == ChatStates.Inviting) && (
+                    {[
+                        ChatStates.Waiting,
+                        ChatStates.Inviting,
+                        ChatStates.WaitingForAck,
+                        ChatStates.Invited,
+                    ].includes(chatState) && (
                         <form className="flex flex-col gap-2">
                             <div>
                                 <TextInput
@@ -52,7 +76,7 @@ export const Chat = () => {
                                 />
                             </div>
                             <Button
-                                variant="sm"
+                                size="sm"
                                 onClick={invite}
                                 icon={
                                     <svg
@@ -81,6 +105,42 @@ export const Chat = () => {
                             </Button>
                         </form>
                     )}
+                    <Dialog
+                        open={invitedModalOpen}
+                        onClose={rejectInvite}
+                        className="relative z-50"
+                    >
+                        <div
+                            className="fixed inset-0 bg-gray-700/40"
+                            aria-hidden={true}
+                        ></div>
+                        <div className="fixed inset-0 flex items-center justify-center">
+                            <Dialog.Panel as={ContentBackdrop} className="p-4">
+                                <Dialog.Title className="text-2xl font-bold">
+                                    New DM Invite
+                                </Dialog.Title>
+                                <Dialog.Description>
+                                    From User ID: {userInfo.recipient}
+                                </Dialog.Description>
+                                <div className="flex justify-between pt-5">
+                                    <Button
+                                        size="sm"
+                                        variant="reject"
+                                        onClick={rejectInvite}
+                                    >
+                                        Reject
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="accept"
+                                        onClick={acceptInvite}
+                                    >
+                                        Accept
+                                    </Button>
+                                </div>
+                            </Dialog.Panel>
+                        </div>
+                    </Dialog>
                 </ContentBackdrop>
             </div>
         </div>

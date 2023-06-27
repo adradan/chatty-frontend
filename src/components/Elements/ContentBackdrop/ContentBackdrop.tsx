@@ -5,15 +5,21 @@ type BackdropProps = React.HTMLAttributes<HTMLDivElement> & {
     className?: string;
 };
 
-const ContentBackdrop = ({ className = '', ...props }: BackdropProps) => {
-    return (
-        <div
-            className={clsx('rounded-md bg-gray-600 drop-shadow-md', className)}
-            {...props}
-        >
-            {props.children}
-        </div>
-    );
-};
+const ContentBackdrop = React.forwardRef<HTMLDivElement, BackdropProps>(
+    ({ className = '', ...props }: BackdropProps, ref) => {
+        return (
+            <div
+                ref={ref}
+                className={clsx(
+                    'rounded-md bg-gray-600 drop-shadow-md',
+                    className
+                )}
+                {...props}
+            >
+                {props.children}
+            </div>
+        );
+    }
+);
 
 export default ContentBackdrop;

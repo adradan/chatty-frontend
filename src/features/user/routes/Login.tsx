@@ -63,7 +63,7 @@ export const Login = () => {
                 <ContentBackdrop className="flex h-2/4 w-2/4 p-8">
                     <form className="flex flex-col gap-2">
                         <Button
-                            variant="sm"
+                            size="sm"
                             onClick={connect}
                             icon={
                                 <svg

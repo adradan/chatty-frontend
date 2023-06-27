@@ -2,7 +2,7 @@ type keyType = 'dmKey';
 
 interface KeyAction {
     type: keyType;
-    payload: CryptoKey;
+    payload?: JsonWebKey;
 }
 
 export type KeyState = {
@@ -11,7 +11,7 @@ export type KeyState = {
 
 const initialState: KeyState = {};
 
-export const keys = (key: CryptoKey): KeyAction => {
+export const keys = (key?: JsonWebKey): KeyAction => {
     return {
         type: 'dmKey',
         payload: key,

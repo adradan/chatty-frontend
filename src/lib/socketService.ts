@@ -3,24 +3,30 @@ import {
     AckCommand,
     ServerMessage,
     ServerMessageCommands,
+    SynAckCommand,
     SynAckMessage,
     SynCommand,
+    SynMessage,
 } from '@/types/socket.ts';
 import { observeStore, RootState, selectFn, store } from '@/lib/store/store.ts';
 import { ChatStates } from '@/types/chat.ts';
 import { chatStateActions } from '@/lib/store/chatState.ts';
-import { user } from '@/lib/store/user.ts';
+import { recipientAction, userAction } from '@/lib/store/user.ts';
 import { erroring } from '@/lib/store/error.ts';
+import { keys } from '@/lib/store/keys.ts';
 
 const selectState: selectFn<ChatStates> = (state: RootState) => {
     return state.chatState;
 };
+
+const THIRTY_SEC = 30000;
 
 class SocketService {
     private _socket?: WebSocket;
     private _userId = '';
     private _publicKey?: CryptoKey;
     private _recipientKey?: JsonWebKey;
+    private _chatBuddy?: string;
     private _privateKey?: CryptoKey;
     private _exportedPublic?: JsonWebKey;
     private chatState: ChatStates = store.getState().chatState;
@@ -32,9 +38,12 @@ class SocketService {
     }
 
     handleSyn = (serverMessage: ServerMessage) => {
-        const { sender } = serverMessage;
-        console.log(serverMessage, this.chatState);
-        this.sendSynAck();
+        const message = serverMessage.message as SynMessage;
+        this._recipientKey = JSON.parse(message.inviterKey) as JsonWebKey;
+        this._chatBuddy = serverMessage.sender;
+        store.dispatch(recipientAction(this._chatBuddy));
+        store.dispatch(keys(this._recipientKey));
+        store.dispatch(chatStateActions.receivingInvite());
     };
 
     handleSynAck = (serverMessage: ServerMessage) => {
@@ -50,11 +59,9 @@ class SocketService {
         this.sendAck(serverMessage);
     };
 
-    handleAck = (serverMessage: ServerMessage) => {
+    handleAck = () => {
         store.dispatch(chatStateActions.receivingAck());
-        console.log('todo!');
     };
-
     connect = (
         publicKey: CryptoKey,
         privateKey: CryptoKey,
@@ -71,13 +78,14 @@ class SocketService {
                         break;
                     case ServerMessageCommands.StartedSession:
                         this._userId = serverMessage.sender;
-                        store.dispatch(user(this._userId));
+                        store.dispatch(userAction(this._userId));
                         break;
                     case ServerMessageCommands.NoRecipient:
                         break;
                     case ServerMessageCommands.ChatMessage:
                         break;
                     case ServerMessageCommands.Ack:
+                        this.handleAck();
                         break;
                     case ServerMessageCommands.Syn:
                         this.handleSyn(serverMessage);
@@ -118,10 +126,23 @@ class SocketService {
         };
         this._socket.send(JSON.stringify(body));
         store.dispatch(chatStateActions.inviting());
-        const THIRTY_SEC = 30000;
         setTimeout(() => {
             if (this.chatState === ChatStates.Inviting) {
                 store.dispatch(chatStateActions.noSynAck());
+                store.dispatch(
+                    erroring('error/set', "Recipient didn't respond.")
+                );
+            }
+        }, THIRTY_SEC);
+    };
+
+    acceptInvite = () => {
+        console.log('accepting.');
+        store.dispatch(chatStateActions.sendingSynAck());
+        this.sendSynAck();
+        setTimeout(() => {
+            if (this.chatState === ChatStates.WaitingForAck) {
+                store.dispatch(chatStateActions.noAck());
                 store.dispatch(
                     erroring('error/set', "Recipient didn't respond.")
                 );
@@ -144,6 +165,16 @@ class SocketService {
     };
 
     sendSynAck = () => {
+        if (!this._chatBuddy || !this._recipientKey) return;
+        const body: SynAckCommand = {
+            SynAck: {
+                recipient: this._chatBuddy,
+                recipientKey: JSON.stringify(this._exportedPublic),
+                inviterKey: JSON.stringify(this._recipientKey),
+            },
+        };
+        console.log(body);
+        this._socket?.send(JSON.stringify(body));
         console.log('todo!');
     };
 

@@ -33,7 +33,7 @@ export const Logout = () => {
             <div className="mt-8 flex grow justify-center">
                 <ContentBackdrop className="flex h-2/4 w-2/4 p-8">
                     <form className="flex flex-col gap-2">
-                        <Button variant="lg" onClick={logout}>
+                        <Button size="lg" onClick={logout}>
                             Logout
                         </Button>
                     </form>
