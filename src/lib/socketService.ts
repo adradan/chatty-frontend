@@ -4,31 +4,16 @@ import {
     ServerMessageCommands,
     SynCommand,
 } from '@/types/socket.ts';
-import { observeStore, RootState, selectFn, store } from '@/lib/store.ts';
+import { observeStore, RootState, selectFn, store } from '@/lib/store/store.ts';
 
-export const inviteStatuses = {
-    Invited: 'invited',
-    ReceivedKey: 'receivedKey',
-    SentAck: 'sentAck',
-};
-
-BigInt.prototype.toJSON = function () {
-    return this.toString();
-};
-
-const selectKeys: selectFn<CryptoKey> = (state: RootState) => {
-    return state.keys;
+const selectKeys: selectFn<CryptoKey | undefined> = (state: RootState) => {
+    return state.keys.publicKey;
 };
 
 class SocketService {
     private _socket: WebSocket | undefined;
     private _userId = '';
-    private username = '';
     private publicKey: JsonWebKey | undefined;
-    private _lastSentCommand: ServerMessageCommands | undefined;
-    // public receivedCommand = useState<ServerMessageCommands>(
-    //     ServerMessageCommands.Unknown
-    // );
 
     constructor() {
         observeStore(store, selectKeys, (keys) => {
@@ -41,7 +26,7 @@ class SocketService {
         console.log(serverMessage);
     };
 
-    connect = (username: string, publicKey: JsonWebKey): Promise<boolean> => {
+    connect = (publicKey: JsonWebKey): Promise<boolean> => {
         return new Promise((resolve) => {
             this._socket = new WebSocket('ws://localhost:3000/ws/');
             this._socket.onmessage = (event: MessageEvent) => {
@@ -74,7 +59,6 @@ class SocketService {
                 resolve(false);
             };
             this._socket.onopen = () => {
-                this.username = username;
                 this.publicKey = publicKey;
                 resolve(true);
             };

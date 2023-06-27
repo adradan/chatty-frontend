@@ -1,13 +1,11 @@
 import ContentBackdrop from 'src/components/Elements/ContentBackdrop';
 import Button from '@/components/Elements/Button';
-import TextInput from '@/components/Elements/TextInput';
 import { useContext, useState } from 'react';
 import clsx from 'clsx';
 import { generateKeyPair } from '@/lib/encryption.ts';
 import { useNavigate } from 'react-router-dom';
 import { KeyPairContext } from '@/context/keyPair.ts';
 import { useDb } from '@/lib/db.ts';
-import { UsernameContext } from '@/context/username.ts';
 import { useSocket } from '@/lib/socketService.ts';
 
 const inputState = {
@@ -23,33 +21,25 @@ type InputStateCode = (typeof inputState)[InputStateKey];
 export const Login = () => {
     const navigate = useNavigate();
     const { setKeyPair } = useContext(KeyPairContext);
-    const { setUsername } = useContext(UsernameContext);
-    const [usr, setUsr] = useState('');
     const [state, setState] = useState<InputStateCode>(inputState.Ok);
-    const [error, setError] = useState('');
+    const [, setError] = useState('');
 
     const socketService = useSocket();
     const dbService = useDb();
 
     const connect = async () => {
-        if (!usr.length) {
-            setError('Username required.');
-            setState(inputState.Error);
-            return;
-        }
         setError('');
         setState(inputState.Loading);
         const newKeyPair = await generateKeyPair();
         // Save in IndexDB
-        await dbService.login(newKeyPair, usr);
-        setUsername(usr);
+        await dbService.login(newKeyPair);
         setKeyPair(newKeyPair);
         const l = await window.crypto.subtle.exportKey(
             'jwk',
             newKeyPair.publicKey
         );
         console.log(l);
-        const isConnected = await socketService.connect(usr, l);
+        const isConnected = await socketService.connect(l);
         console.log(socketService.socket);
         if (isConnected) {
             navigate('/');
@@ -60,27 +50,12 @@ export const Login = () => {
         setState(inputState.Error);
     };
 
-    const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const username = event.target.value.trim();
-        setUsr(username);
-    };
-
     return (
         <div className="flex h-full flex-col">
             <h1 className="text-4xl font-bold">Login</h1>
             <div className="mt-8 flex grow justify-center">
                 <ContentBackdrop className="flex h-2/4 w-2/4 p-8">
                     <form className="flex flex-col gap-2">
-                        <div>
-                            <TextInput
-                                label="Create a username:"
-                                id="username"
-                                maxLength={15}
-                                value={usr}
-                                onChange={onChange}
-                                error={error}
-                            />
-                        </div>
                         <Button
                             variant="sm"
                             onClick={connect}

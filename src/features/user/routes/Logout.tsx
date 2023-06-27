@@ -2,7 +2,6 @@ import ContentBackdrop from 'src/components/Elements/ContentBackdrop';
 import { useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { KeyPairContext } from '@/context/keyPair.ts';
-import { UsernameContext } from '@/context/username.ts';
 import Button from '@/components/Elements/Button';
 import { useDb } from '@/lib/db.ts';
 import { useSocket } from '@/lib/socketService.ts';
@@ -10,12 +9,11 @@ import { useSocket } from '@/lib/socketService.ts';
 export const Logout = () => {
     const navigate = useNavigate();
     const { keyPair, setKeyPair } = useContext(KeyPairContext);
-    const { username, setUsername } = useContext(UsernameContext);
     const socketService = useSocket();
     const dbService = useDb();
 
     useEffect(() => {
-        if (!keyPair || !username) {
+        if (!keyPair) {
             navigate('/');
         }
     }, []);
@@ -25,7 +23,6 @@ export const Logout = () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         setKeyPair(null);
-        setUsername('');
         socketService.close();
         navigate('/');
     };

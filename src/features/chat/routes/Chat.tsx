@@ -1,5 +1,4 @@
 import ContentBackdrop from 'src/components/Elements/ContentBackdrop';
-import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import TextInput from '@/components/Elements/TextInput';
 import Button from '@/components/Elements/Button';
@@ -22,7 +21,6 @@ type ChatStateKey = keyof typeof chatStates;
 type ChatStateCode = (typeof chatStates)[ChatStateKey];
 
 export const Chat = () => {
-    const navigate = useNavigate();
     const [recipient, setRecipient] = useState('');
     const [error, setError] = useState('');
     const [state, setState] = useState<ChatStateCode>(chatStates.Waiting);
