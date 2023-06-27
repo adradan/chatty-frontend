@@ -38,6 +38,11 @@ export type AckCommand = {
     Ack: AckMessage;
 };
 
+export type ChatMessage = {
+    message: string;
+    timestamp: number;
+};
+
 export const ServerMessageCommands = {
     Syn: 'Syn',
     SynAck: 'SynAck',
@@ -59,7 +64,7 @@ export function isServerMessageCommand(x: string): x is ServerMessageCommands {
 
 export type ServerMessage = {
     sender: string;
-    message: string | SynMessage | SynAckMessage | AckMessage;
+    message: string | SynMessage | SynAckMessage | AckMessage | ChatMessage;
     command: ServerMessageCommands;
 };
 

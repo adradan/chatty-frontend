@@ -11,6 +11,7 @@ import { Dialog } from '@headlessui/react';
 import { keys } from '@/lib/store/keys.ts';
 import { recipientAction } from '@/lib/store/user.ts';
 import { chatStateActions } from '@/lib/store/chatState.ts';
+import { ChatBox } from '@/features/chat/components/ChatBox.tsx';
 
 export const Chat = () => {
     const [recipient, setRecipient] = useState('');
@@ -36,7 +37,7 @@ export const Chat = () => {
             return;
         }
         dispatch(erroring('error/clear'));
-
+        // dispatch(chatStateActions.)
         socketService.invite(recipient);
     };
 
@@ -105,6 +106,7 @@ export const Chat = () => {
                             </Button>
                         </form>
                     )}
+                    {chatState === ChatStates.Chatting && <ChatBox />}
                     <Dialog
                         open={invitedModalOpen}
                         onClose={rejectInvite}
