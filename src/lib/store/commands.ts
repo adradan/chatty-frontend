@@ -1,6 +1,6 @@
 import { ServerMessageCommands } from '@/types/socket.ts';
 
-interface CommandAction {
+export interface CommandAction {
     type: 'commands/lastSendCommand' | 'commands/lastReceivedCommand';
     payload: ServerMessageCommands;
 }

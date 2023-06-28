@@ -2,7 +2,7 @@ import { ChatMessage } from '@/types/chat.ts';
 
 type ChatType = 'messages/clear' | 'messages/add';
 
-interface ChatAction {
+export interface ChatAction {
     type: ChatType;
     payload?: ChatMessage;
 }

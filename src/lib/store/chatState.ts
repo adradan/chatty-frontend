@@ -1,7 +1,6 @@
 import { ChatStateActions, ChatStates } from '@/types/chat.ts';
-import { AnyAction } from '@reduxjs/toolkit';
 
-interface ChatStateAction extends AnyAction {
+export interface ChatStateAction {
     type: ChatStateActions;
 }
 

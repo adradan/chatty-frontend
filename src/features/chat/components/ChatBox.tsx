@@ -65,7 +65,7 @@ export const ChatBox = () => {
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                     />
-                    <div className="flex justify-end">
+                    <div className="flex justify-between">
                         <div>{error}</div>
                         <Button variant="accept" onClick={sendMessage}>
                             Send

@@ -1,6 +1,6 @@
 type ErrorType = 'error/set' | 'error/clear';
 
-interface ErrorAction {
+export interface ErrorAction {
     type: ErrorType;
     payload?: string;
 }

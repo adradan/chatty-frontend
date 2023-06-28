@@ -1,10 +1,10 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import commandReducer from './commands.ts';
-import keyReducer from '@/lib/store/keys.ts';
-import messageReducer from '@/lib/store/messages.ts';
-import chatStateReducer from '@/lib/store/chatState.ts';
-import userReducer from '@/lib/store/user.ts';
-import errorReducer from '@/lib/store/error.ts';
+import commandReducer, { CommandAction } from './commands.ts';
+import keyReducer, { KeyAction } from '@/lib/store/keys.ts';
+import messageReducer, { ChatAction } from '@/lib/store/messages.ts';
+import chatStateReducer, { ChatStateAction } from '@/lib/store/chatState.ts';
+import userReducer, { UserAction } from '@/lib/store/user.ts';
+import errorReducer, { ErrorAction } from '@/lib/store/error.ts';
 
 const rootReducer = combineReducers({
     lastCommands: commandReducer,
@@ -14,6 +14,14 @@ const rootReducer = combineReducers({
     user: userReducer,
     error: errorReducer,
 });
+
+export type RootAction =
+    | CommandAction
+    | KeyAction
+    | ChatAction
+    | ChatStateAction
+    | UserAction
+    | ErrorAction;
 
 export const store = configureStore({
     reducer: rootReducer,

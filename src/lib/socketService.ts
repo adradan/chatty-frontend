@@ -11,7 +11,13 @@ import {
     SynCommand,
     SynMessage,
 } from '@/types/socket.ts';
-import { observeStore, RootState, selectFn, store } from '@/lib/store/store.ts';
+import {
+    observeStore,
+    RootAction,
+    RootState,
+    selectFn,
+    store,
+} from '@/lib/store/store.ts';
 import { ChatStates } from '@/types/chat.ts';
 import { chatStateActions } from '@/lib/store/chatState.ts';
 import { recipientAction, userAction } from '@/lib/store/user.ts';
@@ -62,12 +68,9 @@ class SocketService {
         const message = serverMessage.message as SynAckMessage;
         console.log(serverMessage);
         if (message.inviterKey !== JSON.stringify(this._exportedPublic)) {
-            // Display some message here
-            store.dispatch(
-                erroring(
-                    'error/set',
-                    'Recipient sent a bad response. Aborting...'
-                )
+            this.handleError(
+                'Recipient sent a bad response. Aborting...',
+                chatStateActions.disconnecting()
             );
             return;
         }
@@ -91,6 +94,16 @@ class SocketService {
         );
         store.dispatch(chatStateActions.receivingAck());
     };
+
+    reset = () => {
+        this._recipientKey = undefined;
+        this._recipientWebKey = undefined;
+        this._chatBuddy = undefined;
+        store.dispatch(recipientAction(''));
+        store.dispatch(messaging('messages/clear'));
+        store.dispatch(keys());
+    };
+
     connect = (
         publicKey: CryptoKey,
         privateKey: CryptoKey,
@@ -110,6 +123,7 @@ class SocketService {
                         store.dispatch(userAction(this._userId));
                         break;
                     case ServerMessageCommands.NoRecipient:
+                        this.handleNoRecipient(serverMessage);
                         break;
                     case ServerMessageCommands.ChatMessage:
                         this.handleMessage(serverMessage);
@@ -159,9 +173,9 @@ class SocketService {
         store.dispatch(chatStateActions.inviting());
         setTimeout(() => {
             if (this.chatState === ChatStates.Inviting) {
-                store.dispatch(chatStateActions.noSynAck());
-                store.dispatch(
-                    erroring('error/set', "Recipient didn't respond.")
+                this.handleError(
+                    "Recipient didn't respond.",
+                    chatStateActions.noSynAck()
                 );
             }
         }, THIRTY_SEC);
@@ -173,18 +187,36 @@ class SocketService {
         this.sendSynAck();
         setTimeout(() => {
             if (this.chatState === ChatStates.WaitingForAck) {
-                store.dispatch(chatStateActions.noAck());
-                store.dispatch(
-                    erroring('error/set', "Recipient didn't respond.")
+                this.handleError(
+                    "Recipient didn't respond/Not found.",
+                    chatStateActions.noAck()
                 );
             }
         }, THIRTY_SEC);
     };
 
+    handleError = (errMessage: string, dispatchAction: RootAction) => {
+        store.dispatch(erroring('error/set', errMessage));
+        const FIVE_SECONDS = 5000;
+        setTimeout(() => {
+            this.reset();
+            store.dispatch(erroring('error/clear'));
+            store.dispatch(dispatchAction);
+        }, FIVE_SECONDS);
+    };
+
+    handleNoRecipient = () => {
+        this.handleError(
+            'Recipient Disconnected/Not found. Disconnecting...',
+            chatStateActions.noRecipient()
+        );
+    };
+
     handleMessage = async (serverMessage: ServerMessage) => {
         if (!this._privateKey) {
-            store.dispatch(
-                erroring('error/set', 'Private Key not found. Signing out...')
+            this.handleError(
+                'Private Key not found. Signing out...',
+                chatStateActions.disconnecting()
             );
             return;
         }
@@ -207,12 +239,9 @@ class SocketService {
 
     sendMessage = async (message: string) => {
         if (!this._recipientKey) {
-            // Some error here
-            store.dispatch(
-                erroring(
-                    'error/set',
-                    'Recipient Public Key not found. Disconnecting...'
-                )
+            this.handleError(
+                'Recipient Public Key not found. Disconnecting...',
+                chatStateActions.disconnecting()
             );
             return;
         }

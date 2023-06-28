@@ -1,6 +1,6 @@
 type ActionType = 'user/setId' | 'user/setRecipient';
 
-interface KeyAction {
+export interface UserAction {
     type: ActionType;
     payload: string;
 }
@@ -15,17 +15,17 @@ const initialState: UserState = {
     recipient: '',
 };
 
-export const userAction = (id: string): KeyAction => ({
+export const userAction = (id: string): UserAction => ({
     type: 'user/setId',
     payload: id,
 });
 
-export const recipientAction = (id: string): KeyAction => ({
+export const recipientAction = (id: string): UserAction => ({
     type: 'user/setRecipient',
     payload: id,
 });
 
-export default function userReducer(state = initialState, action: KeyAction) {
+export default function userReducer(state = initialState, action: UserAction) {
     switch (action.type) {
         case 'user/setRecipient':
             return {

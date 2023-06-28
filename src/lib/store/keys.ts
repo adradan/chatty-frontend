@@ -1,6 +1,6 @@
 type keyType = 'dmKey';
 
-interface KeyAction {
+export interface KeyAction {
     type: keyType;
     payload?: JsonWebKey;
 }
