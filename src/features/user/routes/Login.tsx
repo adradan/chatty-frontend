@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { KeyPairContext } from '@/context/keyPair.ts';
 import { useDb } from '@/lib/db.ts';
 import Loading from '@/heroicons/Loading.tsx';
+import { useAppDispatch, useAppSelector } from '@/hooks/store.ts';
+import { erroring } from '@/lib/store/error.ts';
 
 const inputState = {
     Ok: 'ok',
@@ -23,13 +25,18 @@ export const Login = () => {
     const [state, setState] = useState<InputStateCode>(inputState.Ok);
 
     const dbService = useDb();
+    const error = useAppSelector((state) => state.error);
+    const dispatch = useAppDispatch();
 
     const connect = async () => {
         setState(inputState.Loading);
+        dispatch(erroring('error/clear'));
         const isConnected = await initKeys(dbService, setKeyPair);
         if (isConnected) {
-            navigate('/');
+            navigate('/chat/dm');
             return;
+        } else {
+            setState(inputState.Ok);
         }
     };
 
@@ -38,7 +45,7 @@ export const Login = () => {
             <h1 className="text-4xl font-bold">Login</h1>
             <div className="mt-8 flex grow justify-center">
                 <ContentBackdrop className="flex h-2/4 w-2/4 p-8">
-                    <form className="flex flex-col gap-2">
+                    <form className="gap flex w-52 flex-col">
                         <Button
                             size="sm"
                             onClick={connect}
@@ -50,6 +57,7 @@ export const Login = () => {
                         >
                             Connect
                         </Button>
+                        <div className="mt-4">{error}</div>
                     </form>
                 </ContentBackdrop>
             </div>

@@ -17,7 +17,7 @@ export const Settings = () => {
     const { keyPair, setKeyPair } = useContext(KeyPairContext);
     const socketService = useSocket();
     const dbService = useDb();
-    const [status, setStatus] = useState('test');
+    const [status, setStatus] = useState('');
 
     const dispatch = useAppDispatch();
     const stateError = useAppSelector((state) => state.error);
