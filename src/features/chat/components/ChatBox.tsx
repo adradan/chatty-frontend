@@ -5,6 +5,7 @@ import { ChatMessage } from '@/features/chat/components/ChatMessage.tsx';
 import { useState } from 'react';
 import { useSocket } from '@/lib/socketService.ts';
 import { messaging } from '@/lib/store/messages.ts';
+import { chatStateActions } from '@/lib/store/chatState.ts';
 
 export const ChatBox = () => {
     // const messages = [
@@ -37,10 +38,22 @@ export const ChatBox = () => {
         setNewMessage('');
     };
 
+    const disconnect = () => {
+        socketService.resetId();
+        dispatch(chatStateActions.disconnecting());
+    };
+
     return (
         <div className="h-full w-full">
-            <h4 className="font-semibold">Chatting with: {recipient}</h4>
             <div className="flex h-full w-full flex-col justify-between gap-3 py-4">
+                <div>
+                    <h4 className="pb-2 font-semibold">
+                        Chatting with: {recipient}
+                    </h4>
+                    <Button size="sm" variant="reject" onClick={disconnect}>
+                        Disconnect
+                    </Button>
+                </div>
                 <div
                     className="min-h-0 min-w-0 overflow-auto rounded-sm bg-gray-800 p-4"
                     style={{ flex: '1 1 1px' }}

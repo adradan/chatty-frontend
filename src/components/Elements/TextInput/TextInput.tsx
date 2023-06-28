@@ -18,6 +18,7 @@ type TextInputProps = React.HTMLAttributes<HTMLInputElement> & {
     value: string;
     onChange: (a: React.ChangeEvent<HTMLInputElement>) => void;
     error?: string;
+    disabled?: boolean;
 };
 
 const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
@@ -32,6 +33,7 @@ const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
             onChange,
             value,
             error,
+            disabled,
             ...props
         }: TextInputProps,
         ref
@@ -48,6 +50,7 @@ const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
                     maxLength={maxLength}
                     onChange={onChange}
                     value={value}
+                    disabled={disabled}
                     {...props}
                 />
             </div>

@@ -32,7 +32,11 @@ export const Chat = () => {
     };
 
     const invite = async () => {
-        if (!recipient.length || !/^\d+$/g.test(recipient)) {
+        if (
+            !recipient.length ||
+            !/^\d+$/g.test(recipient) ||
+            recipient === userInfo.userId
+        ) {
             dispatch(erroring('error/set', 'Enter a valid recipient ID.'));
             return;
         }
@@ -74,11 +78,13 @@ export const Chat = () => {
                                     value={recipient}
                                     onChange={onRecipientChange}
                                     error={error}
+                                    disabled={chatState === ChatStates.Inviting}
                                 />
                             </div>
                             <Button
                                 size="sm"
                                 onClick={invite}
+                                disabled={chatState === ChatStates.Inviting}
                                 icon={
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"

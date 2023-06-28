@@ -4,6 +4,7 @@ import {
     AckMessage,
     ChatMessage,
     MessageCommand,
+    ResetIDCommand,
     ServerMessage,
     ServerMessageCommands,
     SynAckCommand,
@@ -81,6 +82,7 @@ class SocketService {
         this._recipientWebKey = publicKey;
         store.dispatch(keys(publicKey));
         store.dispatch(chatStateActions.receivingSynAck());
+        store.dispatch(recipientAction(serverMessage.sender));
         this.sendAck(serverMessage);
     };
 
@@ -123,10 +125,15 @@ class SocketService {
                         store.dispatch(userAction(this._userId));
                         break;
                     case ServerMessageCommands.NoRecipient:
-                        this.handleNoRecipient(serverMessage);
+                        this.handleNoRecipient();
+                        break;
+                    case 'Unknown':
                         break;
                     case ServerMessageCommands.ChatMessage:
                         this.handleMessage(serverMessage);
+                        break;
+                    case 'ResetID':
+                        this.handleResetID(serverMessage);
                         break;
                     case ServerMessageCommands.Ack:
                         this.handleAck(serverMessage);
@@ -156,9 +163,24 @@ class SocketService {
         });
     };
 
+    handleResetID = (serverMessage: ServerMessage) => {
+        this._userId = serverMessage.sender;
+        store.dispatch(userAction(this._userId));
+    };
+
+    resetId = () => {
+        const body: ResetIDCommand = {
+            ResetId: {
+                id: this._userId,
+            },
+        };
+        this._socket?.send(JSON.stringify(body));
+    };
+
     close = () => {
         if (!this._socket) return;
         this._socket.close(1000, 'Client leaving.');
+        this.reset();
     };
 
     invite = (recipient: string) => {
@@ -202,6 +224,7 @@ class SocketService {
             this.reset();
             store.dispatch(erroring('error/clear'));
             store.dispatch(dispatchAction);
+            this.resetId();
         }, FIVE_SECONDS);
     };
 

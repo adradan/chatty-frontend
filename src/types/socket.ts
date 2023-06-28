@@ -10,6 +10,12 @@ export type MessageCommand = {
     };
 };
 
+export type ResetIDCommand = {
+    ResetId: {
+        id: string;
+    };
+};
+
 export type SynMessage = {
     inviterKey: string;
     recipient: string;
@@ -53,6 +59,7 @@ export const ServerMessageCommands = {
     StartedSession: 'StartedSession',
     Success: 'Success',
     Unknown: 'Unknown',
+    ResetID: 'ResetID',
 } as const;
 
 export type ServerMessageCommands =
