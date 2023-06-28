@@ -1,6 +1,9 @@
 import { createContext, useContext } from 'react';
 import {
     AckCommand,
+    AckMessage,
+    ChatMessage,
+    MessageCommand,
     ServerMessage,
     ServerMessageCommands,
     SynAckCommand,
@@ -14,6 +17,8 @@ import { chatStateActions } from '@/lib/store/chatState.ts';
 import { recipientAction, userAction } from '@/lib/store/user.ts';
 import { erroring } from '@/lib/store/error.ts';
 import { keys } from '@/lib/store/keys.ts';
+import { messaging } from '@/lib/store/messages.ts';
+import { decryptMessage, encryptMessage, importKey } from '@/lib/encryption.ts';
 
 const selectState: selectFn<ChatStates> = (state: RootState) => {
     return state.chatState;
@@ -25,7 +30,8 @@ class SocketService {
     private _socket?: WebSocket;
     private _userId = '';
     private _publicKey?: CryptoKey;
-    private _recipientKey?: JsonWebKey;
+    private _recipientKey?: CryptoKey;
+    private _recipientWebKey?: JsonWebKey;
     private _chatBuddy?: string;
     private _privateKey?: CryptoKey;
     private _exportedPublic?: JsonWebKey;
@@ -39,27 +45,50 @@ class SocketService {
 
     handleSyn = (serverMessage: ServerMessage) => {
         const message = serverMessage.message as SynMessage;
-        this._recipientKey = JSON.parse(message.inviterKey) as JsonWebKey;
+        const publicKey = JSON.parse(message.inviterKey) as JsonWebKey;
+        importKey(publicKey).then((k) => {
+            this._recipientKey = k;
+        });
+        console.log(publicKey);
+
+        this._recipientWebKey = publicKey;
         this._chatBuddy = serverMessage.sender;
         store.dispatch(recipientAction(this._chatBuddy));
-        store.dispatch(keys(this._recipientKey));
+        store.dispatch(keys(publicKey));
         store.dispatch(chatStateActions.receivingInvite());
     };
 
     handleSynAck = (serverMessage: ServerMessage) => {
-        store.dispatch(chatStateActions.receivingSynAck());
         const message = serverMessage.message as SynAckMessage;
         console.log(serverMessage);
         if (message.inviterKey !== JSON.stringify(this._exportedPublic)) {
             // Display some message here
-            console.log('no match.');
+            store.dispatch(
+                erroring(
+                    'error/set',
+                    'Recipient sent a bad response. Aborting...'
+                )
+            );
             return;
         }
-        this._recipientKey = JSON.parse(message.recipientKey) as JsonWebKey;
+        const publicKey = JSON.parse(message.recipientKey) as JsonWebKey;
+        importKey(publicKey).then((k) => {
+            this._recipientKey = k;
+        });
+        this._recipientWebKey = publicKey;
+        store.dispatch(keys(publicKey));
+        store.dispatch(chatStateActions.receivingSynAck());
         this.sendAck(serverMessage);
     };
 
-    handleAck = () => {
+    handleAck = (serverMessage: ServerMessage) => {
+        console.log('ack');
+        const message = serverMessage.message as AckMessage;
+        console.log(
+            message.recipientKey === JSON.stringify(this._exportedPublic),
+            message.recipientKey,
+            JSON.stringify(this._exportedPublic)
+        );
         store.dispatch(chatStateActions.receivingAck());
     };
     connect = (
@@ -83,9 +112,10 @@ class SocketService {
                     case ServerMessageCommands.NoRecipient:
                         break;
                     case ServerMessageCommands.ChatMessage:
+                        this.handleMessage(serverMessage);
                         break;
                     case ServerMessageCommands.Ack:
-                        this.handleAck();
+                        this.handleAck(serverMessage);
                         break;
                     case ServerMessageCommands.Syn:
                         this.handleSyn(serverMessage);
@@ -103,6 +133,7 @@ class SocketService {
                 resolve(false);
             };
             this._socket.onopen = () => {
+                console.log('open', 'mykey: ', exportedPublic);
                 this._publicKey = publicKey;
                 this._privateKey = privateKey;
                 this._exportedPublic = exportedPublic;
@@ -121,7 +152,7 @@ class SocketService {
         const body: SynCommand = {
             Syn: {
                 inviterKey: JSON.stringify(this._exportedPublic),
-                recipient: BigInt(recipient).toString(),
+                recipient: recipient,
             },
         };
         this._socket.send(JSON.stringify(body));
@@ -150,18 +181,62 @@ class SocketService {
         }, THIRTY_SEC);
     };
 
-    sendAck = (serverMessage: ServerMessage) => {
-        const { sender } = serverMessage;
-        console.log(serverMessage);
-        const message = serverMessage.message as SynAckMessage;
-        const body: AckCommand = {
-            Ack: {
-                recipient: sender,
-                recipientKey: message.recipientKey,
+    handleMessage = async (serverMessage: ServerMessage) => {
+        if (!this._privateKey) {
+            store.dispatch(
+                erroring('error/set', 'Private Key not found. Signing out...')
+            );
+            return;
+        }
+        const message = serverMessage.message as ChatMessage;
+        const decrypted = await decryptMessage(
+            message.message,
+            this._privateKey
+        );
+        if (typeof decrypted === 'boolean') {
+            return;
+        }
+        store.dispatch(
+            messaging('messages/add', {
+                sender: serverMessage.sender,
+                timestamp: message.timestamp,
+                message: decrypted,
+            })
+        );
+    };
+
+    sendMessage = async (message: string) => {
+        if (!this._recipientKey) {
+            // Some error here
+            store.dispatch(
+                erroring(
+                    'error/set',
+                    'Recipient Public Key not found. Disconnecting...'
+                )
+            );
+            return;
+        }
+        const encryptedMessage = await encryptMessage(
+            message,
+            this._recipientKey
+        );
+        const body: MessageCommand = {
+            Message: {
+                message: encryptedMessage,
             },
         };
         this._socket?.send(JSON.stringify(body));
-        console.log('todo!');
+    };
+
+    sendAck = (serverMessage: ServerMessage) => {
+        const { sender } = serverMessage;
+        const body: AckCommand = {
+            Ack: {
+                recipient: sender,
+                recipientKey: JSON.stringify(this._recipientWebKey),
+            },
+        };
+        this._socket?.send(JSON.stringify(body));
     };
 
     sendSynAck = () => {
@@ -170,7 +245,7 @@ class SocketService {
             SynAck: {
                 recipient: this._chatBuddy,
                 recipientKey: JSON.stringify(this._exportedPublic),
-                inviterKey: JSON.stringify(this._recipientKey),
+                inviterKey: JSON.stringify(this._recipientWebKey),
             },
         };
         console.log(body);

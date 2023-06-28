@@ -1,11 +1,20 @@
 import { ChatMessage } from '@/types/chat.ts';
 
+type ChatType = 'messages/clear' | 'messages/add';
+
 interface ChatAction {
-    type: 'messages/clear' | 'messages/add';
+    type: ChatType;
     payload?: ChatMessage;
 }
 
 const initialState: ChatMessage[] = [];
+
+export const messaging = (type: ChatType, payload?: ChatMessage) => {
+    return {
+        type,
+        payload,
+    };
+};
 
 export default function messageReducer(
     state = initialState,
@@ -13,16 +22,12 @@ export default function messageReducer(
 ) {
     switch (action.type) {
         case 'messages/clear':
-            return {
-                ...state,
-                messages: [],
-            };
+            return [];
         case 'messages/add':
             if (!action.payload) return state;
-            return {
-                ...state,
-                messages: [...state, action.payload],
-            };
+            return [...state, action.payload].sort(
+                (a, b) => a.timestamp - b.timestamp
+            );
         default:
             return state;
     }
