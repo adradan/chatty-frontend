@@ -1,8 +1,17 @@
 # Chatty Frontend
 
-### Goals:
+### Current Deployment
 
--   End-to-End Encryption
+insert deployed url here.
+
+### About
+Chatty is an end-to-end encryption messenger. Users use RSA-OAEP key pairs to asymmetrically encrypt
+and decrypt messages.
+
+Users are only able to DM one person at a time and can reject/accept invites, providing they know a users
+unique ID.
+
+The backend repo can be found at [chatty](https://github.com/adradan/chatty).
 
 ### File Structure
 

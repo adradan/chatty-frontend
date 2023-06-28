@@ -1,6 +1,6 @@
 import ContentBackdrop from 'src/components/Elements/ContentBackdrop';
 import Button from '@/components/Elements/Button';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { initKeys } from '@/lib/encryption.ts';
 import { useNavigate } from 'react-router-dom';
 import { KeyPairContext } from '@/context/keyPair.ts';
@@ -21,12 +21,18 @@ type InputStateCode = (typeof inputState)[InputStateKey];
 
 export const Login = () => {
     const navigate = useNavigate();
-    const { setKeyPair } = useContext(KeyPairContext);
+    const { keyPair, setKeyPair } = useContext(KeyPairContext);
     const [state, setState] = useState<InputStateCode>(inputState.Ok);
 
     const dbService = useDb();
     const error = useAppSelector((state) => state.error);
     const dispatch = useAppDispatch();
+
+    useEffect(() => {
+        if (keyPair) {
+            navigate('/chat/dm');
+        }
+    }, []);
 
     const connect = async () => {
         setState(inputState.Loading);
