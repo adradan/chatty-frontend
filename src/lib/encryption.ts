@@ -1,5 +1,44 @@
+import { DbService } from '@/lib/db.ts';
+import { socketService } from '@/lib/socketService.ts';
+import { chatStateActions } from '@/lib/store/chatState.ts';
+import { store } from '@/lib/store/store.ts';
+import { erroring } from '@/lib/store/error.ts';
+
 const KEY_TYPE = 'RSA-OAEP';
 const HASH = 'SHA-256';
+
+export async function initKeys(
+    dbService: DbService,
+    setKeyPair: React.Dispatch<React.SetStateAction<CryptoKeyPair>>
+) {
+    const { newKeyPair, exportedPublic } = await createKeys();
+
+    await dbService.login(newKeyPair);
+    const isConnected = await socketService.connect(
+        newKeyPair.publicKey,
+        newKeyPair.privateKey,
+        exportedPublic
+    );
+
+    if (isConnected) {
+        setKeyPair(newKeyPair);
+        store.dispatch(chatStateActions.initializing());
+    } else {
+        await dbService.resetDb();
+        store.dispatch(erroring('error/set', "Couldn't reach the server."));
+    }
+    return isConnected;
+}
+
+export async function createKeys() {
+    const newKeyPair = await generateKeyPair();
+    // Save in IndexDB
+    const exportedPublic = await exportKey(newKeyPair.publicKey);
+    return {
+        newKeyPair,
+        exportedPublic,
+    };
+}
 
 export async function generateKeyPair(): Promise<CryptoKeyPair> {
     // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/generateKey
@@ -13,6 +52,10 @@ export async function generateKeyPair(): Promise<CryptoKeyPair> {
         true,
         ['encrypt', 'decrypt']
     );
+}
+
+export async function exportKey(key: CryptoKey) {
+    return await window.crypto.subtle.exportKey('jwk', key);
 }
 
 function encodeMessage(message: string) {

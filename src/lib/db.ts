@@ -7,6 +7,11 @@ export interface Key {
     timestamp: Date;
 }
 
+export interface DbKeyPair {
+    privateKey: Key;
+    publicKey: Key;
+}
+
 export class DexieSubclass extends Dexie {
     publicKeys!: Table<Key>;
     privateKeys!: Table<Key>;
@@ -41,7 +46,7 @@ export class DbService {
         } as Key);
     };
 
-    getKeyPair = async () => {
+    getKeyPair = async (): Promise<DbKeyPair | undefined> => {
         const privateKey = await keyDB.privateKeys.orderBy('timestamp').last();
         const publicKey = await keyDB.publicKeys.orderBy('timestamp').last();
 

@@ -1,7 +1,7 @@
 import { ChatStateActions, ChatStates } from '@/types/chat.ts';
 
 export interface ChatStateAction {
-    type: ChatStateActions;
+    type: ChatStateActions | 'state/reset';
 }
 
 const initializing = (): ChatStateAction => ({
@@ -48,6 +48,8 @@ const disconnecting = (): ChatStateAction => ({
     type: ChatStateActions.Disconnecting,
 });
 
+const resetting = (): ChatStateAction => ({ type: 'state/reset' });
+
 export const chatStateActions = {
     initializing,
     inviting,
@@ -60,6 +62,7 @@ export const chatStateActions = {
     noSynAck,
     noRecipient,
     disconnecting,
+    resetting,
 };
 
 const initialState = ChatStates.Uninitialized;
@@ -123,6 +126,8 @@ export default function chatStateReducer(
         state === ChatStates.Chatting
     ) {
         return ChatStates.Waiting;
+    } else if (action.type === 'state/reset') {
+        return ChatStates.Uninitialized;
     } else {
         return state;
     }

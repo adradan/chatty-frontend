@@ -63,6 +63,12 @@ class SocketService {
         store.dispatch(recipientAction(this._chatBuddy));
         store.dispatch(keys(publicKey));
         store.dispatch(chatStateActions.receivingInvite());
+
+        setTimeout(() => {
+            if (this.chatState === ChatStates.Invited) {
+                this.rejectInvite();
+            }
+        }, THIRTY_SEC);
     };
 
     handleSynAck = (serverMessage: ServerMessage) => {
@@ -104,6 +110,12 @@ class SocketService {
         store.dispatch(recipientAction(''));
         store.dispatch(messaging('messages/clear'));
         store.dispatch(keys());
+    };
+
+    rejectInvite = () => {
+        store.dispatch(keys());
+        store.dispatch(recipientAction(''));
+        store.dispatch(chatStateActions.rejectingInvite());
     };
 
     connect = (

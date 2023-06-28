@@ -23,7 +23,7 @@ export default function NavBar() {
                         <BurgerMenu />
                     </Menu.Button>
                     <Transition enter="transition duration-100">
-                        <Menu.Items className="absolute mt-2 w-32 divide-y divide-solid divide-gray-600 rounded-md bg-gray-700">
+                        <Menu.Items className="absolute z-50 mt-2 w-32 divide-y divide-solid divide-gray-600 rounded-md bg-gray-700">
                             <Menu.Item>
                                 <Link
                                     to="/"
@@ -46,18 +46,26 @@ export default function NavBar() {
                                 <>
                                     <Menu.Item>
                                         <Link
-                                            to="/user/logout"
-                                            className="inline-block w-full px-3 py-2"
-                                        >
-                                            Logout
-                                        </Link>
-                                    </Menu.Item>
-                                    <Menu.Item>
-                                        <Link
                                             to="/chat/dm"
                                             className="inline-block w-full px-3 py-2"
                                         >
                                             DMs
+                                        </Link>
+                                    </Menu.Item>
+                                    <Menu.Item>
+                                        <Link
+                                            to="/user/settings"
+                                            className="inline-block w-full px-3 py-2"
+                                        >
+                                            Settings
+                                        </Link>
+                                    </Menu.Item>
+                                    <Menu.Item>
+                                        <Link
+                                            to="/user/logout"
+                                            className="inline-block w-full px-3 py-2"
+                                        >
+                                            Logout
                                         </Link>
                                     </Menu.Item>
                                 </>

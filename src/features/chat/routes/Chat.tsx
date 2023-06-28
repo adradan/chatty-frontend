@@ -1,17 +1,14 @@
 import ContentBackdrop from 'src/components/Elements/ContentBackdrop';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import TextInput from '@/components/Elements/TextInput';
 import Button from '@/components/Elements/Button';
-import clsx from 'clsx';
 import { useSocket } from '@/lib/socketService.ts';
 import { useAppDispatch, useAppSelector } from '@/hooks/store.ts';
 import { ChatStates } from '@/types/chat.ts';
 import { erroring } from '@/lib/store/error.ts';
 import { Dialog } from '@headlessui/react';
-import { keys } from '@/lib/store/keys.ts';
-import { recipientAction } from '@/lib/store/user.ts';
-import { chatStateActions } from '@/lib/store/chatState.ts';
 import { ChatBox } from '@/features/chat/components/ChatBox.tsx';
+import Loading from '@/heroicons/Loading.tsx';
 
 export const Chat = () => {
     const [recipient, setRecipient] = useState('');
@@ -31,6 +28,13 @@ export const Chat = () => {
         setRecipient(rec);
     };
 
+    useEffect(() => {
+        return () => {
+            socketService.reset();
+            socketService.resetId();
+        };
+    }, []);
+
     const invite = async () => {
         if (
             !recipient.length ||
@@ -46,13 +50,15 @@ export const Chat = () => {
     };
 
     const rejectInvite = () => {
-        dispatch(keys());
-        dispatch(recipientAction(''));
-        dispatch(chatStateActions.rejectingInvite());
+        socketService.rejectInvite();
     };
 
     const acceptInvite = () => {
         socketService.acceptInvite();
+    };
+
+    const resetId = () => {
+        socketService.resetId();
     };
 
     return (
@@ -86,29 +92,21 @@ export const Chat = () => {
                                 onClick={invite}
                                 disabled={chatState === ChatStates.Inviting}
                                 icon={
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        className={clsx(
-                                            chatState === ChatStates.Inviting &&
-                                                'animate-spin',
-                                            'h-4',
-                                            'w-4',
-                                            chatState !== ChatStates.Inviting &&
-                                                'hidden'
-                                        )}
-                                    >
-                                        <path
-                                            stroke="#000"
-                                            strokeLinecap="round"
-                                            strokeWidth="3.556"
-                                            d="M20 12a8 8 0 01-11.76 7.061"
-                                        ></path>
-                                    </svg>
+                                    <Loading
+                                        loading={
+                                            chatState === ChatStates.Inviting
+                                        }
+                                    />
                                 }
                             >
                                 Invite
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="reject"
+                                onClick={resetId}
+                            >
+                                Reset My ID
                             </Button>
                         </form>
                     )}

@@ -45,7 +45,6 @@ export const AppProvider = ({ children }: AppProviderTypes) => {
             if (isConnected) {
                 // dispatch(chatStateActions.initializing());
                 store.dispatch(chatStateActions.initializing());
-                console.log(store.getState());
                 return;
             }
 
