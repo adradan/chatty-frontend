@@ -5,19 +5,20 @@ RUN npm install -g pnpm
 
 WORKDIR /app
 
+ENV VITE_BACKEND_URL=chatty.macksproductions.com/api/
+
 COPY . .
 
 RUN rm -rf ./node_modules
+RUN rm -rf ./.env
 
 RUN pnpm install
 
 RUN pnpm run build
 
 FROM nginx:stable-alpine-slim
-ENV VITE_BACKEND_URL=0.0.0.0:8000
 
-EXPOSE 80
-EXPOSE 443
+EXPOSE 3000
 
 ENV TZ=Etc/UTC
 
