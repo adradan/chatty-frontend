@@ -14,17 +14,9 @@ RUN vite build
 FROM nginx:stable-alpine-slim
 ENV VITE_BACKEND_URL=0.0.0.0:8000
 
-RUN apt-get update \
-    && apt-get install -y ca-certificates tzdata \
-    && rm -rf /var/lib/apt/lists/*
-
 EXPOSE 80
 
-ENV TZ=Etc/UTC APP_USER=appuser
-
-RUN groupadd $APP_USER \
-    && useradd -g $APP_USER $APP_USER \
-    && mkdir -p ${APP}
+ENV TZ=Etc/UTC
 
 COPY --from=build /app/dist /app
 
