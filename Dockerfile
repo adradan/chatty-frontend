@@ -5,7 +5,7 @@ RUN npm install -g pnpm
 
 WORKDIR /app
 
-ENV VITE_BACKEND_URL=chatty.macksproductions.com/api/
+ENV VITE_BACKEND_URL=chatty.macksproductions.com/api
 
 COPY . .
 
