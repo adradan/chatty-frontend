@@ -124,7 +124,7 @@ class SocketService {
         exportedPublic: JsonWebKey
     ): Promise<boolean> => {
         return new Promise((resolve) => {
-            this._socket = new WebSocket('ws://localhost:3000/ws/');
+            this._socket = new WebSocket(`ws://${import.meta.env.VITE_BACKEND_URL}/ws/`);
             this._socket.onmessage = (event: MessageEvent) => {
                 const { data } = event;
                 const serverMessage = JSON.parse(data) as ServerMessage;

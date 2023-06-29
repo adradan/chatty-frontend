@@ -13,7 +13,7 @@ RUN pnpm install
 RUN vite build
 
 FROM nginx:stable-alpine-slim
-ENV VITE_BACKEND_URL=localhost:8000
+ENV VITE_BACKEND_URL=0.0.0.0:8000
 
 RUN apt-get update \
     && apt-get install -y ca-certificates tzdata \
