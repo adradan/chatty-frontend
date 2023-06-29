@@ -9,7 +9,7 @@ COPY . .
 
 RUN pnpm install
 
-RUN vite build
+RUN pnpm build
 
 FROM nginx:stable-alpine-slim
 ENV VITE_BACKEND_URL=0.0.0.0:8000
