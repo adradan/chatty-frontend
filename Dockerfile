@@ -17,6 +17,7 @@ FROM nginx:stable-alpine-slim
 ENV VITE_BACKEND_URL=0.0.0.0:8000
 
 EXPOSE 80
+EXPOSE 443
 
 ENV TZ=Etc/UTC
 
