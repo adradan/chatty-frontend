@@ -3,7 +3,6 @@ LABEL authors="ericvsolcruz"
 
 RUN npm install -g pnpm
 
-MKDIR app
 WORKDIR ./app
 
 COPY ./package.json ./package.json
