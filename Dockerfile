@@ -3,13 +3,15 @@ LABEL authors="ericvsolcruz"
 
 RUN npm install -g pnpm
 
-WORKDIR ./app
+WORKDIR /app
 
 COPY . .
 
+RUN rm -rf ./node_modules
+
 RUN pnpm install
 
-RUN pnpm build
+RUN pnpm run build
 
 FROM nginx:stable-alpine-slim
 ENV VITE_BACKEND_URL=0.0.0.0:8000
@@ -18,8 +20,11 @@ EXPOSE 80
 
 ENV TZ=Etc/UTC
 
-COPY --from=build /app/dist /app
+ENV CACHEBUSTER=0
 
 WORKDIR /app
 
-COPY . /usr/share/nginx/html
+COPY --from=build /app/dist/ /usr/share/nginx/html/
+
+
+CMD ["nginx", "-g", "daemon off;"]
